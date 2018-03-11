@@ -30,11 +30,42 @@
           </div>
         </nav>
         <br>
+        <hr>
         <br>
 
-        <h3>Inicio</h3>
-        <br>
-        <img src="http://synergymaxlearn.com/wp-content/uploads/2016/07/data-mining.png" alt=""/>
+    <!-- Tabla Responsive para mostrar los registros -->
+    <table class="bordered">
+        <thead>
+          <tr>
+              <th>Edad</th>
+              <th>Nivel de sodio</th>
+              <th>Nivel de potasio</th>
+              <th>Genero</th>
+              <th>Presion Sanguinea</th>
+              <th>Colesterol</th>
+              <th>Drug Recommended</th>
 
-       </body>
+          </tr>
+        </thead>
+
+        <tbody>
+            <?php
+
+
+            $file_handle = fopen("registrosProcesados.txt", "rb");
+
+            while (!feof($file_handle) ) {
+                $line_of_text = fgets($file_handle);
+                $parts = explode('--', $line_of_text);
+                echo "<tr><td >$parts[0]</td><td>$parts[1]</td><td>$parts[2]</td><td>$parts[3]</td><td>$parts[4]</td><td>$parts[5]
+                </td><td><b>$parts[6]</b></td></tr>";
+            }
+            fclose($file_handle);
+
+            ?>
+
+        </tbody>
+      </table>
+
+   </body>
 </html>
