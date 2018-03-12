@@ -4,6 +4,210 @@ import shutil
 import os
 #p =  int(sys.argv[1])
 
+def confusion(mod,entrenador,nro,vdc,conf):
+    if(nro!=0):
+        matriz=readable(conf[nro-1])
+    arch=open(mod,"r")
+    modelo=arch.read()
+    rol=modelo.splitlines()
+    pdrugs=rol[0].split(" ")
+    pbp=rol[1].split(" ")
+    pch=rol[2].split(" ")
+    pse=rol[3].split(" ")
+    dne=rol[4].split(" ")
+    dnn=rol[5].split(" ")
+    dnk=rol[6].split(" ")
+
+    pdrugs=tofloat(pdrugs)
+    pbp=tofloat(pbp)
+    pch=tofloat(pch)
+    pse=tofloat(pse)
+    dne=tofloat(dne)
+    dnn=tofloat(dnn)
+    dnk=tofloat(dnk)
+
+    tablacondicionalbp=[[pbp[0],pbp[1],pbp[2]],[pbp[3],pbp[4],pbp[5]],[pbp[6],pbp[7],pbp[8]],[pbp[9],pbp[10],pbp[11]],[pbp[12],pbp[13],pbp[14]]]
+    tablacondicionalch=[[pch[0],pch[1],pch[2]],[pch[3],pch[4],pch[5]],[pch[6],pch[7],pch[8]],[pch[9],pch[10],pch[11]],[pch[12],pch[13],pch[14]]]
+    tablacondicionalse=[[pse[0],pse[1]],[pse[2],pse[3]],[pse[4],pse[5]],[pse[6],pse[7]],[pse[8],pse[9]]]
+
+    cp=open(entrenador, "r")
+    cont=cp.read()
+    rol=cont.splitlines()
+    numero=[]
+    edad=[]
+    sexo=[]
+    bp=[]
+    colesterol=[]
+    sodio=[]
+    potasio=[]
+    droga=[]
+    datos=[]
+    if (nro==0):
+        matriz=[[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
+    for i in range(0,len(matriz)):
+        matriz[i]=toint(matriz[i])
+
+    for i in range (1,len(rol)):
+        a=rol[i].split(" ")
+        b=a[0].split("\t")
+        numero.append(b[0])
+        edad.append(b[1])
+        sexo.append(b[2])
+        bp.append(b[3])
+        colesterol.append(b[4])
+        sodio.append(b[5])
+        potasio.append(b[6])
+        droga.append(b[7])
+
+    for i in range (0, len(edad)):
+        temporal=[edad[i],sexo[i],bp[i],colesterol[i],sodio[i],potasio[i]]
+        datos.append(temporal)
+
+    for i in range (0, len(datos)):
+        age=datos[i][0]
+        sex=datos[i][1]
+        bloodpressure=datos[i][2]
+        cholesterol=datos[i][3]
+        sodium=datos[i][4]
+        potasium=datos[i][5]
+        logaritmicos=[]
+        normales=[]
+        condse=[]
+        condbp=[]
+        condch=[]
+        conded=[]
+        condna=[]
+        distnormaled=[]
+        distnormalna=[]
+        distnormalk=[]
+
+        if(sex=="F"):
+            for k in range(0,len(tablacondicionalse)):
+                condse.append(tablacondicionalse[k][0])
+        elif(sex=="M"):
+            for k in range(0,len(tablacondicionalse)):
+                condse.append(tablacondicionalse[k][1])
+
+        if(bloodpressure=="HIGH"):
+            for k in range(0,len(tablacondicionalbp)):
+                condbp.append(tablacondicionalbp[k][0])
+        elif(bloodpressure=="NORMAL"):
+            for k in range(0,len(tablacondicionalbp)):
+                condbp.append(tablacondicionalbp[k][1])
+        elif(bloodpressure=="LOW"):
+            for k in range(0,len(tablacondicionalbp)):
+                condbp.append(tablacondicionalbp[k][2])
+
+        if(cholesterol=="HIGH"):
+            for k in range(0,len(tablacondicionalch)):
+                condch.append(tablacondicionalch[k][0])
+        elif(cholesterol=="NORMAL"):
+            for k in range(0,len(tablacondicionalch)):
+                condch.append(tablacondicionalch[k][1])
+        elif(cholesterol=="LOW"):
+            for k in range(0,len(tablacondicionalch)):
+                condch.append(tablacondicionalch[k][2])
+
+        for k in range(0,5):
+            distnormaled.append(normdist(dne[k],dne[k+5],float(age)))
+            distnormalna.append(normdist(dnn[k],dnn[k+5],float(sodium)))
+            distnormalk.append(normdist(dnk[k],dnk[k+5],float(potasium)))
+
+        finalA=[pdrugs[0],condse[0],condbp[0],condch[0],distnormaled[0],distnormalna[0],distnormalk[0]]
+        finalB=[pdrugs[1],condse[1],condbp[1],condch[1],distnormaled[1],distnormalna[1],distnormalk[1]]
+        finalC=[pdrugs[2],condse[2],condbp[2],condch[2],distnormaled[2],distnormalna[2],distnormalk[2]]
+        finalX=[pdrugs[3],condse[3],condbp[3],condch[3],distnormaled[3],distnormalna[3],distnormalk[3]]
+        finalY=[pdrugs[4],condse[4],condbp[4],condch[4],distnormaled[4],distnormalna[4],distnormalk[4]]
+
+        vdv=[finalA,finalB,finalC,finalX,finalY]
+
+        for k in range(0,len(vdv)):
+            for j in range(0,len(vdv[k])):
+                vdv[k][j]=math.log10(vdv[k][j])
+
+        for k in range(0,len(vdv)):
+            logaritmicos.append(sum(vdv[k]))
+
+        for k in range(0,len(logaritmicos)):
+            normales.append(10**(logaritmicos[k]))
+
+        final=logaritmicos.index(max(logaritmicos))
+        comparador=""
+        pospredicho=0
+        if final==0:
+            comparador="drugA"
+        elif final==1:
+            comparador="drugB"
+            pospredicho=1
+        elif final==2:
+            comparador="drugC"
+            pospredicho=2
+        elif final==3:
+            comparador="drugX"
+            pospredicho=3
+        elif final==4:
+            comoparador="drugY"
+            pospredicho=4
+
+        if comparador==droga[i]:
+            posreal=pospredicho
+        elif droga[i]=="drugA":
+            posreal=0
+        elif droga[i]=="drugB":
+            posreal=1
+        elif droga[i]=="drugC":
+            posreal=2
+        elif droga[i]=="drugX":
+            posreal=3
+        elif droga[i]=="drugY":
+            posreal=4
+
+        matriz[posreal][pospredicho]=matriz[posreal][pospredicho]+1
+    for i in range(0,len(matriz)):
+        matriz[i]=tostr(matriz[i])
+    mat=open(vdc,"w")
+    mat.seek(0)
+    mat.truncate()
+    for i in range(0, len(matriz)):
+        mat.write(matriz[i][0]+"\t"+matriz[i][1]+"\t"+matriz[i][2]+"\t"+matriz[i][3]+"\t"+matriz[i][4]+"\n")
+    mat.close
+
+def normdist(miu,sigma,value):
+    pi=math.pi
+    exponente= ((value-miu)**2)/(2*(sigma**2))
+    divisor=sigma*(math.sqrt(2*pi))
+    resultado=(math.exp(-exponente))/divisor
+    return resultado
+
+def tofloat(array):
+    for i in range(0, len(array)):
+        array[i]=float(array[i])
+    return array
+
+def toint(array):
+    for i in range(0, len(array)):
+        array[i]=int(array[i])
+    return array
+
+def tostr(array):
+    for i in range(0, len(array)):
+        array[i]=str(array[i])
+    return array
+
+def readable(archivo):
+    arch=open(archivo,"r")
+    modelo=arch.read()
+    rol=modelo.splitlines()
+    fila0=rol[0].split("\t")
+    fila1=rol[1].split("\t")
+    fila2=rol[2].split("\t")
+    fila3=rol[3].split("\t")
+    fila4=rol[4].split("\t")
+    matriz=[fila0,fila1,fila2,fila3,fila4]
+    for i in range(0,len(matriz)):
+        matriz[i]=toint(matriz[i])
+    return matriz
+
 def modelos(nombre,nro):
     arch=open(nombre, "r")
     cont=arch.read()
@@ -479,6 +683,7 @@ cont=data.read()
 rol=cont.splitlines()
 vector=[]
 a=[]
+
 for i in range (1,len(rol)):
     vector.append(rol[i].split("\t"))
 for i in range(len(vector)):
@@ -500,33 +705,104 @@ for i in range(len(vector)):
 #ORGANIZAMOS LAS CARPETAS DEPENDIENDO DEL NUMERO DE FOLDERS QUE SE HAGAN
 if(p==2):
     vdf=["feed1.txt","feed2.txt"]
+    conf=["confusion1.txt","confusion2.txt"]
+    models=["modelo1.txt","modelo2.txt"]
     sort(p,a,vdf)
 elif(p==3):
     vdf=["feed1.txt","feed2.txt","feed3.txt"]
+    conf=["confusion1.txt","confusion2.txt","confusion3.txt"]
+    models=["modelo1.txt","modelo2.txt","modelo3.txt"]
     sort(p,a,vdf)
 elif(p==4):
     vdf=["feed1.txt","feed2.txt","feed3.txt","feed4.txt"]
+    conf=["confusion1.txt","confusion2.txt","confusion3.txt","confusion4.txt"]
+    models=["modelo1.txt","modelo2.txt","modelo3.txt","modelo4.txt"]
     sort(p,a,vdf)
 elif(p==5):
     vdf=["feed1.txt","feed2.txt","feed3.txt","feed4.txt","feed5.txt"]
+    conf=["confusion1.txt","confusion2.txt","confusion3.txt","confusion4.txt","confusion5.txt"]
+    models=["modelo1.txt","modelo2.txt","modelo3.txt","modelo4.txt","modelo5.txt"]
     sort(p,a,vdf)
 elif(p==6):
     vdf=["feed1.txt","feed2.txt","feed3.txt","feed4.txt","feed5.txt","feed6.txt"]
+    conf=["confusion1.txt","confusion2.txt","confusion3.txt","confusion4.txt","confusion5.txt","confusion6.txt"]
+    models=["modelo1.txt","modelo2.txt","modelo3.txt","modelo4.txt","modelo5.txt","modelo6.txt"]
     sort(p,a,vdf)
 elif(p==7):
     vdf=["feed1.txt","feed2.txt","feed3.txt","feed4.txt","feed5.txt","feed6.txt","feed7.txt"]
+    conf=["confusion1.txt","confusion2.txt","confusion3.txt","confusion4.txt","confusion5.txt","confusion6.txt","confusion7.txt"]
+    models=["modelo1.txt","modelo2.txt","modelo3.txt","modelo4.txt","modelo5.txt","modelo6.txt","modelo7.txt"]
     sort(p,a,vdf)
 elif(p==8):
     vdf=["feed1.txt","feed2.txt","feed3.txt","feed4.txt","feed5.txt","feed6.txt","feed7.txt","feed8.txt"]
+    conf=["confusion1.txt","confusion2.txt","confusion3.txt","confusion4.txt","confusion5.txt","confusion6.txt","confusion7.txt","confusion8.txt"]
+    models=["modelo1.txt","modelo2.txt","modelo3.txt","modelo4.txt","modelo5.txt","modelo6.txt","modelo7.txt","modelo8.txt"]
     sort(p,a,vdf)
 elif(p==9):
     vdf=["feed1.txt","feed2.txt","feed3.txt","feed4.txt","feed5.txt","feed6.txt","feed7.txt","feed8.txt","feed9.txt"]
+    conf=["confusion1.txt","confusion2.txt","confusion3.txt","confusion4.txt","confusion5.txt","confusion6.txt","confusion7.txt","confusion8.txt","confusion9.txt"]
+    models=["modelo1.txt","modelo2.txt","modelo3.txt","modelo4.txt","modelo5.txt","modelo6.txt","modelo7.txt","modelo8.txt","modelo9.txt"]
     sort(p,a,vdf)
 elif(p==10):
     vdf=["feed1.txt","feed2.txt","feed3.txt","feed4.txt","feed5.txt","feed6.txt","feed7.txt","feed8.txt","feed9.txt","feed10.txt"]
+    conf=["confusion1.txt","confusion2.txt","confusion3.txt","confusion4.txt","confusion5.txt","confusion6.txt","confusion7.txt","confusion8.txt","confusion9.txt","confusion10.txt"]
+    models=["modelo1.txt","modelo2.txt","modelo3.txt","modelo4.txt","modelo5.txt","modelo6.txt","modelo7.txt","modelo8.txt","modelo9.txt","modelo10.txt"]
     sort(p,a,vdf)
 
 for i in range(0,len(vdf)):
     modelos(vdf[i],i+1)
-    print vdf[i]
-    print i
+
+for i in range(0,len(vdf)):
+    confusion(models[i],vdf[i-1],i,conf[i],conf)
+
+matrix=readable(conf[-1])
+for i in range(0,len(matrix)):
+    matrix[i]=tostr(matrix[i])
+
+with open("confusionfinal.txt","w") as finalconf:
+    finalconf.seek(0)
+    finalconf.truncate()
+    for i in range(0, len(matrix)):
+        finalconf.write(matrix[i][0]+"\t"+matrix[i][1]+"\t"+matrix[i][2]+"\t"+matrix[i][3]+"\t"+matrix[i][4]+"\n")
+    finalconf.close
+
+for i in range (0,len(vdf)):
+    matrix[i]=toint(matrix[i])
+
+columna0=[]
+columna1=[]
+columna2=[]
+columna3=[]
+columna4=[]
+for i in range(0,len(matrix)):
+    columna0.append(matrix[i][0])
+    columna1.append(matrix[i][1])
+    columna2.append(matrix[i][2])
+    columna3.append(matrix[i][3])
+    columna4.append(matrix[i][4])
+columnas=[columna0,columna1,columna2,columna3,columna4]
+precision=[]
+recuerdo=[]
+temp=0
+cci=0
+sdp=0
+sdr=0
+for i in range(0,len(matrix)):
+    temp=temp+matrix[i][i]
+    sdp=(matrix[i][i])/sum(columnas[i])
+    rdp=(matrix[i][i])/sum(matrix[i])
+    precision.append(sdp)
+    recuerdo.append(rdp)
+cci=temp/(sum(matrix[0])+sum(matrix[1])+sum(matrix[2])+sum(matrix[3])+sum(matrix[4]))
+medf=[]
+for i in range(0,len(precision)):
+    cal=(2*precision[i]*recuerdo[i])/(precision[i]+recuerdo[i])
+    medf.append(cal)
+
+nv=open("variablesfinales.txt","w")
+nv.seek[9]
+nv.truncate()
+nv.write(str(precision[0])+" "+str(precision[1])+" "+str(precision[2])+" "+str(precision[3])+" "+str(precision[4])+"\n")
+nv.write(str(recuerdo[0])+" "+str(recuerdo[1])+" "+str(recuerdo[2])+" "+str(recuerdo[3])+" "+str(recuerdo[4])+"\n")
+nv.write(str(mdf[0])+" "+str(mdf[1])+" "+str(mdf[2])+" "+str(mdf[3])+" "+str(mdf[4])+"\n")
+nv.write(str(cci))
